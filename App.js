@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Alert } from 'react-native';
+import { StyleSheet, Text, View, Alert, ScrollView } from 'react-native';
 import { useState, useEffect } from 'react';
 import * as Haptics from 'expo-haptics';
 import * as Speech from 'expo-speech';
@@ -8,7 +8,57 @@ import Asteroid from './components/Asteroid';
 import OptionsPad from './components/OptionsPad';
 import Spaceship from './components/Spaceship';
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    this.setState({ errorInfo });
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <View style={{ flex: 1, backgroundColor: '#b33939', paddingTop: 60, paddingHorizontal: 20 }}>
+          <Text style={{ color: 'white', fontSize: 24, fontWeight: 'bold' }}>🛑 JS CRASH CAUGHT!</Text>
+          <ScrollView style={{ marginTop: 20 }}>
+            <Text style={{ color: '#f1c40f', fontSize: 16, fontWeight: 'bold' }}>Error:</Text>
+            <Text style={{ color: 'white', fontSize: 14 }}>{this.state.error && this.state.error.toString()}</Text>
+            <Text style={{ color: '#f1c40f', fontSize: 16, fontWeight: 'bold', marginTop: 20 }}>Stack Trace:</Text>
+            <Text style={{ color: '#d1d8e0', fontSize: 12 }}>{this.state.errorInfo && this.state.errorInfo.componentStack}</Text>
+          </ScrollView>
+        </View>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// Global Native/JS unhandled error catcher
+if (global.ErrorUtils) {
+  const originalHandler = global.ErrorUtils.getGlobalHandler();
+  global.ErrorUtils.setGlobalHandler((error, isFatal) => {
+    Alert.alert(
+      'Fatal Error Catcher',
+      `Error: ${error.message}\n\nPlease take a screenshot and share it!`,
+      [{ text: 'OK' }]
+    );
+    if (originalHandler) originalHandler(error, isFatal);
+  });
+}
+
 export default function App() {
+  return (
+    <ErrorBoundary>
+      <GameApp />
+    </ErrorBoundary>
+  );
+}
+
+function GameApp() {
   const [problem, setProblem] = useState(null);
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
