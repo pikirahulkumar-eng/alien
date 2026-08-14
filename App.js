@@ -98,11 +98,19 @@ export default function App() {
     setAsteroidDestroyed(false);
     
     const spokenText = text.replace('+', 'plus').replace('-', 'minus').replace('×', 'into');
-    Speech.speak(spokenText, { language: 'en-IN', rate: 0.9, pitch: 1.2 });
+    try {
+      Speech.speak(spokenText, { language: 'en-IN', rate: 0.9, pitch: 1.2 });
+    } catch (e) {
+      console.log("TTS Error:", e);
+    }
   };
 
   useEffect(() => {
-    generateProblem();
+    // Delay first problem to allow Android TTS engine to bind without crashing
+    const timer = setTimeout(() => {
+      generateProblem();
+    }, 1000);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleSelectOption = (selected) => {
@@ -134,7 +142,9 @@ export default function App() {
         setSpeed(getSpeedForLevel(newLevel));
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
         setShowLevelUp(true);
-        Speech.speak("Level Up!", { language: 'en-IN', rate: 1.0, pitch: 1.5 });
+        try {
+          Speech.speak("Level Up!", { language: 'en-IN', rate: 1.0, pitch: 1.5 });
+        } catch(e) {}
         
         setTimeout(() => {
           setIsShooting(false);
@@ -143,7 +153,9 @@ export default function App() {
         }, 1500);
       } else if (isCombo) {
         const praises = ["Awesome!", "Superb!", "Brilliant!"];
-        Speech.speak(praises[Math.floor(Math.random() * praises.length)], { language: 'en-IN', rate: 1.1, pitch: 1.3 });
+        try {
+          Speech.speak(praises[Math.floor(Math.random() * praises.length)], { language: 'en-IN', rate: 1.1, pitch: 1.3 });
+        } catch(e) {}
         
         setTimeout(() => {
           setIsShooting(false);
@@ -159,8 +171,10 @@ export default function App() {
     } else {
       // Wrong!
       triggerShake();
-      Speech.stop();
-      Speech.speak("Oops!", { language: 'en-IN', rate: 1.0, pitch: 0.8 });
+      try {
+        Speech.stop();
+        Speech.speak("Oops!", { language: 'en-IN', rate: 1.0, pitch: 0.8 });
+      } catch(e) {}
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       setStreak(0); // Break streak
     }
@@ -169,8 +183,10 @@ export default function App() {
   const handleMiss = () => {
     if (!asteroidDestroyed) {
       triggerShake();
-      Speech.stop();
-      Speech.speak("Too slow!", { language: 'en-IN', rate: 1.1, pitch: 0.9 });
+      try {
+        Speech.stop();
+        Speech.speak("Too slow!", { language: 'en-IN', rate: 1.1, pitch: 0.9 });
+      } catch(e) {}
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       setIsHit(true);
       setStreak(0); // Break streak
