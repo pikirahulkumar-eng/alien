@@ -1,6 +1,8 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, Alert, ScrollView } from 'react-native';
 import React, { useState, useEffect } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import * as Speech from 'expo-speech';
 import Animated, { useSharedValue, useAnimatedStyle, withSequence, withTiming } from 'react-native-reanimated';
@@ -37,24 +39,17 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-// Global Native/JS unhandled error catcher
-if (global.ErrorUtils) {
-  const originalHandler = global.ErrorUtils.getGlobalHandler();
-  global.ErrorUtils.setGlobalHandler((error, isFatal) => {
-    Alert.alert(
-      'Fatal Error Catcher',
-      `Error: ${error.message}\n\nPlease take a screenshot and share it!`,
-      [{ text: 'OK' }]
-    );
-    if (originalHandler) originalHandler(error, isFatal);
-  });
-}
+// Global Native/JS unhandled error catcher removed to prevent hard native crashes on mount.
 
 export default function App() {
   return (
-    <ErrorBoundary>
-      <GameApp />
-    </ErrorBoundary>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <ErrorBoundary>
+          <GameApp />
+        </ErrorBoundary>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 
